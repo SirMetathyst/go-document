@@ -3,18 +3,19 @@ package kv
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/SirMetathyst/go-document"
 	"github.com/SirMetathyst/go-kv"
 	"reflect"
 )
 
-var _ document.Store[*Document] = &DB[*Document]{}
+var _ document.ReadWriter[*Document] = &DB[*Document]{}
 
 type DB[T document.Document] struct{ kv.Store }
 
-func (s *DB[T]) StoreDocument(ctx context.Context, b []byte, v ...document.Marshaler) error {
+func (s *DB[T]) StoreDocument(ctx context.Context, b []byte, v ...any) error {
 
-	if len(b) == 0 || len(v) == 0 {
+	if len(b) == 0 || v == nil {
 		return nil
 	}
 
@@ -23,7 +24,7 @@ func (s *DB[T]) StoreDocument(ctx context.Context, b []byte, v ...document.Marsh
 	})
 }
 
-func (s *DB[T]) CreateDocument(ctx context.Context, b []byte, v ...document.Marshaler) error {
+func (s *DB[T]) CreateDocument(ctx context.Context, b []byte, v ...any) error {
 
 	if len(b) == 0 || len(v) == 0 {
 		return nil
@@ -34,7 +35,7 @@ func (s *DB[T]) CreateDocument(ctx context.Context, b []byte, v ...document.Mars
 	}))
 }
 
-func (s *DB[T]) ReadDocument(ctx context.Context, b []byte, v ...[]byte) (list []T, err error) {
+func (s *DB[T]) FetchDocument(ctx context.Context, b []byte, v ...[]byte) (list []T, err error) {
 
 	if len(b) == 0 || len(v) == 0 {
 		return nil, nil
@@ -67,7 +68,7 @@ func (s *DB[T]) ReadDocument(ctx context.Context, b []byte, v ...[]byte) (list [
 	}))
 }
 
-func (s *DB[T]) ReadDocumentFn(ctx context.Context, b []byte, factory func() (T, error), v ...[]byte) (list []T, err error) {
+func (s *DB[T]) FetchDocumentFn(ctx context.Context, b []byte, factory func() (T, error), v ...[]byte) (list []T, err error) {
 
 	if len(b) == 0 || len(v) == 0 {
 		return nil, nil
@@ -101,7 +102,7 @@ func (s *DB[T]) ReadDocumentFn(ctx context.Context, b []byte, factory func() (T,
 	}))
 }
 
-func (s *DB[T]) UpdateDocument(ctx context.Context, b []byte, v ...document.Marshaler) error {
+func (s *DB[T]) UpdateDocument(ctx context.Context, b []byte, v ...any) error {
 
 	if len(b) == 0 || len(v) == 0 {
 		return nil
@@ -196,19 +197,45 @@ func (s *DB[T]) ListDocumentFn(ctx context.Context, b []byte, factory func() (T,
 	})
 }
 
-func putFor(ctx kv.PutContext, v []document.Marshaler) error {
+func putFor(ctx kv.PutContext, v []any) error {
 
 	if len(v) == 0 {
 		return nil
+	} else if len(v) == 1 {
+
+		vtype := reflect.TypeOf(v[0])
+
+		if vtype.Kind() == reflect.Slice {
+			return putForSlice(ctx, reflect.ValueOf(v[0]))
+		}
+
+		key, value, err := v[0].(document.Marshaler).MarshalDocument()
+		if err != nil {
+			return err
+		}
+		if err := ctx.Put(key, value); err != nil {
+			return err
+		}
 	}
 
+	return putForSlice(ctx, reflect.ValueOf(v))
+}
+
+func putForSlice(ctx kv.PutContext, v reflect.Value) error {
+
+	vLen := v.Len()
 	i := 0
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			key, value, err := v[i].MarshalDocument()
+			target := v.Index(i).Elem().Interface()
+			marshaler, ok := target.(document.Marshaler)
+			if !ok {
+				return errors.New("document: element does not implement document.Marshaler")
+			}
+			key, value, err := marshaler.MarshalDocument()
 			if err != nil {
 				return err
 			}
@@ -216,7 +243,7 @@ func putFor(ctx kv.PutContext, v []document.Marshaler) error {
 				return err
 			}
 			i++
-			if i >= len(v) {
+			if i >= vLen {
 				return nil
 			}
 		}
@@ -268,4 +295,8 @@ func (s *Document) UnmarshalDocument(k []byte, v []byte) error {
 
 func New[T document.Document](store kv.Store) (*DB[T], error) {
 	return &DB[T]{store}, nil
+}
+
+func MustNew[T document.Document](store kv.Store) *DB[T] {
+	return &DB[T]{store}
 }

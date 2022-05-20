@@ -10,41 +10,45 @@ var (
 	ErrDocumentNotFound = errors.New("document: document not found")
 )
 
-type Store[T Document] interface {
+type ReadWriter[T Document] interface {
+	Reader[T]
+	Writer
+}
+
+type Writer interface {
 	Storer
 	Creater
-	Reader[T]
 	Updater
 	Deleter
+}
+
+type Reader[T Unmarshaler] interface {
+	Fetcher[T]
 	Lister[T]
 }
 
 type Storer interface {
-	StoreDocument(ctx context.Context, b []byte, v ...Marshaler) error
-	//StoreDocumentFn(ctx context.Context, b []byte, fn func(ctx PutContext) error) error
+	StoreDocument(ctx context.Context, b []byte, v ...any) error
 }
 
 type Creater interface {
-	CreateDocument(ctx context.Context, b []byte, v ...Marshaler) error
-	//CreateDocumentFn(ctx context.Context, b []byte, fn func(ctx PutContext) error) error
+	CreateDocument(ctx context.Context, b []byte, v ...any) error
 }
 
-type Reader[T Document] interface {
-	ReadDocument(ctx context.Context, b []byte, v ...[]byte) ([]T, error)
-	ReadDocumentFn(ctx context.Context, b []byte, factory func() (T, error), v ...[]byte) ([]T, error)
-	//ReadDocumentFn(ctx context.Context, b []byte, fn func(ctx GetContext) error) error
+type Fetcher[T Unmarshaler] interface {
+	FetchDocument(ctx context.Context, b []byte, v ...[]byte) ([]T, error)
+	FetchDocumentFn(ctx context.Context, b []byte, factory func() (T, error), v ...[]byte) ([]T, error)
 }
 
 type Updater interface {
-	UpdateDocument(ctx context.Context, b []byte, v ...Marshaler) error
-	//ReadDocumentFn(ctx context.Context, b []byte, fn func(ctx GetContext) error) error
+	UpdateDocument(ctx context.Context, b []byte, v ...any) error
 }
 
 type Deleter interface {
 	DeleteDocument(ctx context.Context, b []byte, v ...[]byte) error
 }
 
-type Lister[T Document] interface {
+type Lister[T Unmarshaler] interface {
 	ListDocument(ctx context.Context, b []byte) ([]T, error)
 	ListDocumentFn(ctx context.Context, b []byte, factory func() (T, error)) ([]T, error)
 }

@@ -11,33 +11,33 @@ import (
 	"testing"
 )
 
-func TestDB_StoreDocument_DoesNotErrorWithoutBucket(t *testing.T) {
-	db, closeFn := BoltDB()
-	defer closeFn()
+//func TestDB_StoreDocument_DoesNotErrorWithoutBucket(t *testing.T) {
+//	db, closeFn := BoltDB()
+//	defer closeFn()
+//
+//	err := db.StoreDocument(context.Background(), nil)
+//	assert.Nil(t, err)
+//
+//	err = db.StoreDocument(context.Background(), document.Bucket{})
+//	assert.Nil(t, err)
+//
+//	err = db.StoreDocument(context.Background(), document.Bucket{}, []document.Marshaler{}...)
+//	assert.Nil(t, err)
+//
+//	err = db.StoreDocument(context.Background(), nil, []document.Marshaler{}...)
+//	assert.Nil(t, err)
+//}
 
-	err := db.StoreDocument(context.Background(), nil)
-	assert.Nil(t, err)
-
-	err = db.StoreDocument(context.Background(), document.Bucket{})
-	assert.Nil(t, err)
-
-	err = db.StoreDocument(context.Background(), document.Bucket{}, []document.Marshaler{}...)
-	assert.Nil(t, err)
-
-	err = db.StoreDocument(context.Background(), nil, []document.Marshaler{}...)
-	assert.Nil(t, err)
-}
-
-func TestDB_StoreDocument_DoesNotErrorWithoutKV(t *testing.T) {
-	db, closeFn := BoltDB()
-	defer closeFn()
-
-	err := db.StoreDocument(context.Background(), document.Bucket("default"))
-	assert.Nil(t, err)
-
-	err = db.StoreDocument(context.Background(), document.Bucket("default"), []document.Marshaler{}...)
-	assert.Nil(t, err)
-}
+//func TestDB_StoreDocument_DoesNotErrorWithoutKV(t *testing.T) {
+//	db, closeFn := BoltDB()
+//	defer closeFn()
+//
+//	err := db.StoreDocument(context.Background(), document.Bucket("default"))
+//	assert.Nil(t, err)
+//
+//  err = db.StoreDocument(context.Background(), document.Bucket("default"), []document.Marshaler{}...)
+//	assert.Nil(t, err)
+//}
 
 func TestDB_StoreDocument_CreatesKeysWhenTheyDontExist(t *testing.T) {
 	db, closeFn := BoltDB()
@@ -49,11 +49,16 @@ func TestDB_StoreDocument_CreatesKeysWhenTheyDontExist(t *testing.T) {
 		&Document{Key: document.Key("key2"), Value: []byte("value2")},
 	}
 
-	err := db.StoreDocument(context.Background(), bucket, data...)
+	err := db.StoreDocument(context.Background(), bucket, data)
+	//err := db.StoreDocument(context.Background(), bucket, &Document{Key: document.Key("key1"), Value: []byte("value1")})
+	//err := db.StoreDocument(context.Background(), bucket, &Document{Key: document.Key("key1"), Value: []byte("value1")}, &Document{Key: document.Key("key2"), Value: []byte("value2")})
 	assert.Nil(t, err)
 
-	list, err := db.ReadDocument(context.Background(), bucket, extractKeys(data)...)
+	list, err := db.FetchDocument(context.Background(), bucket, extractKeys(data)...)
+	//list, err := db.FetchDocument(context.Background(), bucket, document.Key("key1"))
+	//list, err := db.FetchDocument(context.Background(), bucket, document.Key("key1"), document.Key("key2"))
 	assert.Nil(t, err)
+
 	assert.Contains(t, list, &Document{Key: document.Key("key1"), Value: []byte("value1")})
 	assert.Contains(t, list, &Document{Key: document.Key("key2"), Value: []byte("value2")})
 }

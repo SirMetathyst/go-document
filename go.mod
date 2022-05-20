@@ -3,7 +3,7 @@ module github.com/SirMetathyst/go-document
 go 1.18
 
 require (
-	github.com/SirMetathyst/go-kv v0.0.0-20220520120606-fc95d6bc2f14
+	github.com/SirMetathyst/go-kv v0.1.0
 	github.com/stretchr/testify v1.7.1
 	go.etcd.io/bbolt v1.3.6
 )

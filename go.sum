@@ -1,5 +1,5 @@
-github.com/SirMetathyst/go-kv v0.0.0-20220520120606-fc95d6bc2f14 h1:biEecKdi37maz0Bl4MquNn145Z71KF4RQ6TpZl1U2UA=
-github.com/SirMetathyst/go-kv v0.0.0-20220520120606-fc95d6bc2f14/go.mod h1:Cb/vWIWGqGsHj3lZEGMNzkN8JRY9OhhymTGZ49cDQzs=
+github.com/SirMetathyst/go-kv v0.1.0 h1:ULLghTrbzHsYaB9NXhkvegBXVAJKct83nXFbjm9rdVE=
+github.com/SirMetathyst/go-kv v0.1.0/go.mod h1:Cb/vWIWGqGsHj3lZEGMNzkN8JRY9OhhymTGZ49cDQzs=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
